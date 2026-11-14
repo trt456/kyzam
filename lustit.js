@@ -21,11 +21,13 @@ function generateKolecka() {
         }
 
         const kolecko = document.createElement('input');
-        kolecko.type = 'number';
-        kolecko.min = '0';
-        kolecko.max = '9';
+        kolecko.type = 'text';
+        kolecko.inputMode = 'numeric';
+        kolecko.maxLength = 1;
+        kolecko.pattern = '[0-9]';
         kolecko.value = '0';
         kolecko.classList.add('kolecko');
+        kolecko.addEventListener('focus', () => kolecko.select());
         inputsWrapper.lastElementChild.appendChild(kolecko);
     }
 }
@@ -37,6 +39,13 @@ document.getElementById('char').remove();
 document.getElementById('message-setting').remove();
 document.getElementById('share-result').remove();
 generateKolecka();
+
+koleckaDiv.addEventListener('input', (event) => {
+    const input = event.target;
+    if (input instanceof HTMLInputElement && input.classList.contains('kolecko')) {
+        input.value = input.value.replace(/[^0-9]/g, '').slice(0, 1);
+    }
+});
 
 const unlockButton = document.createElement('button');
 unlockButton.textContent = 'Odemknout';
@@ -63,11 +72,11 @@ koleckaDiv.addEventListener('wheel', (event) => {
 }, { passive: false });
 
 unlockButton.addEventListener('click', async () => {
-    const code = Array.from(koleckaDiv.querySelectorAll('.kolecko'))
-        .map(input => input.value)
-        .join('');
+    const kolecka = Array.from(koleckaDiv.querySelectorAll('.kolecko'));
+    const code = kolecka.map(input => input.value).join('');
 
-    if (!/^\d{1,12}$/.test(code)) {
+    if (kolecka.length < 1 || kolecka.length > 12 ||
+        kolecka.some(input => !/^\d$/.test(input.value))) {
         unlockResult.textContent = 'Každé kolečko musí obsahovat jednu číslici.';
         return;
     }

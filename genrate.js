@@ -4,6 +4,7 @@ const randomButton = document.querySelector('button.random');
 const generateButton = document.querySelector('button.generate');
 const messageInput = document.getElementById('message');
 const shareResult = document.getElementById('share-result');
+const qrCodeDiv = document.getElementById('qr-code');
 
 function generateKolecka() {
     const char = Number(charInput.value);
@@ -18,17 +19,26 @@ function generateKolecka() {
         }
 
         const kolecko = document.createElement('input');
-        kolecko.type = 'number';
-        kolecko.min = '0';
-        kolecko.max = '9';
+        kolecko.type = 'text';
+        kolecko.inputMode = 'numeric';
+        kolecko.maxLength = 1;
+        kolecko.pattern = '[0-9]';
         kolecko.value = '0';
         kolecko.classList.add('kolecko');
+        kolecko.addEventListener('focus', () => kolecko.select());
         inputsWrapper.lastElementChild.appendChild(kolecko);
     }
 }
 
 charInput.addEventListener('input', generateKolecka);
 generateKolecka();
+
+koleckaDiv.addEventListener('input', (event) => {
+    const input = event.target;
+    if (input instanceof HTMLInputElement && input.classList.contains('kolecko')) {
+        input.value = input.value.replace(/[^0-9]/g, '').slice(0, 1);
+    }
+});
 
 koleckaDiv.addEventListener('wheel', (event) => {
     const input = event.target;
@@ -57,12 +67,12 @@ randomButton.addEventListener('click', () => {
 });
 
 generateButton.addEventListener('click', async () => {
-    const code = Array.from(koleckaDiv.querySelectorAll('.kolecko'))
-        .map(input => input.value)
-        .join('');
+    const kolecka = Array.from(koleckaDiv.querySelectorAll('.kolecko'));
+    const code = kolecka.map(input => input.value).join('');
     const message = messageInput.value.trim();
 
-    if (!/^\d{1,12}$/.test(code)) {
+    if (kolecka.length < 1 || kolecka.length > 12 ||
+        kolecka.some(input => !/^\d$/.test(input.value))) {
         shareResult.textContent = 'Každé kolečko musí obsahovat jednu číslici.';
         return;
     }
@@ -73,6 +83,8 @@ generateButton.addEventListener('click', async () => {
 
     generateButton.disabled = true;
     shareResult.textContent = 'Vytvářím odkaz…';
+    qrCodeDiv.hidden = true;
+    qrCodeDiv.replaceChildren();
 
     try {
         const response = await fetch(`${window.kyzamConfig.supabaseUrl}/functions/v1/create-lock`, {
@@ -96,6 +108,19 @@ generateButton.addEventListener('click', async () => {
         link.href = shareUrl.href;
         link.textContent = shareUrl.href;
         shareResult.replaceChildren('Odkaz na zámek: ', link);
+
+        qrCodeDiv.hidden = false;
+        try {
+            new QRCode(qrCodeDiv, {
+                text: shareUrl.href,
+                width: 200,
+                height: 200,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } catch (error) {
+            console.error('Nepodařilo se vytvořit QR kód.', error);
+            qrCodeDiv.textContent = 'Odkaz funguje, ale QR kód se nepodařilo vytvořit.';
+        }
     } catch (error) {
         shareResult.textContent = error instanceof Error
             ? error.message

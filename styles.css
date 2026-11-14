@@ -46,10 +46,11 @@ img.open {
     font-size: clamp(12px, 2.5vw, 18px);
     font-weight: bold;
     text-align: center;
-    appearance: textfield;
 }
-.kolecko::-webkit-inner-spin-button,
-.kolecko::-webkit-outer-spin-button {
-    appearance: none;
-    margin: 0;
+
+.qr-code {
+    width: fit-content;
+    margin: 1rem auto;
+    padding: 8px;
+    background: white;
 }
