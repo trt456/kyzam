@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>kyzam</title>
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body>
+    <h1>kyzam</h1>
+    <input type="number" id="char" min="1" value="4" max="12" placeholder="Enter number of characters (1-12)">
+    <div id="kolecka">
+        <img class="open" src="open.jpg" id="img">
+    </div>
+    <button class="random">random</button>
+    <div id="message-setting">
+        <label for="message">Zpráva po odemčení</label>
+        <input type="text" id="message" maxlength="1000" placeholder="Zadej zprávu">
+    </div>
+    <button class="generate">Vytvořit odkaz</button>
+    <p id="share-result" aria-live="polite"></p>
+    <script src="script.js"></script>
+</body>
+</html>

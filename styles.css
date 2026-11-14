@@ -1,0 +1,55 @@
+#kolecka {
+    position: relative;
+    width: min(90vw, 640px);
+    margin: 0 auto;
+}
+
+#img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+img.open {
+    position: relative;
+    left:10%;
+}
+.inputs-wrapper {
+    position: absolute;
+    top: 61%;
+    left: 50%;
+    width: 42%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+.input-row {
+    display: flex;
+    justify-content: center;
+    gap: clamp(2px, 0.8vw, 6px);
+    perspective: 260px;
+}
+
+.kolecko {
+    box-sizing: border-box;
+    width: clamp(18px, 5vw, 36px);
+    height: clamp(32px, 7vw, 44px);
+    padding: 0;
+    border: 1px solid #50565b;
+    border-radius: 4px;
+    background: linear-gradient(
+        to bottom,
+        #f8fafb 0%, #818a90 12%, #e3e7e9 27%,
+        #565e64 50%, #d9dfe2 73%, #737c82 90%, #f8fafb 100%
+    );
+    box-shadow: inset 0 1px 3px #ffffffaa, inset 0 -2px 4px #0005, 0 2px 3px #0006;
+    color: #202428;
+    font-size: clamp(12px, 2.5vw, 18px);
+    font-weight: bold;
+    text-align: center;
+    appearance: textfield;
+}
+.kolecko::-webkit-inner-spin-button,
+.kolecko::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+}
