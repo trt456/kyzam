@@ -10,7 +10,7 @@ function generateKolecka() {
         return;
     }
 
-    koleckaDiv.innerHTML = '<img src="closed.jpg" id="img"><div class="inputs-wrapper"></div>';
+    koleckaDiv.innerHTML = '<img src="closed-optimized.jpg" id="img"><div class="inputs-wrapper"></div>';
     const inputsWrapper = koleckaDiv.querySelector('.inputs-wrapper');
 
     for (let i = 0; i < char; i++) {
@@ -24,10 +24,8 @@ function generateKolecka() {
         kolecko.type = 'text';
         kolecko.inputMode = 'numeric';
         kolecko.maxLength = 1;
-        kolecko.pattern = '[0-9]';
         kolecko.value = '0';
         kolecko.classList.add('kolecko');
-        kolecko.addEventListener('focus', () => kolecko.select());
         inputsWrapper.lastElementChild.appendChild(kolecko);
     }
 }
@@ -37,46 +35,26 @@ document.querySelectorAll('button').forEach(button => {
 });
 document.getElementById('char').remove();
 document.getElementById('message-setting').remove();
+document.getElementById('link-help').remove();
 document.getElementById('share-result').remove();
+document.getElementById('qr-code').remove();
 generateKolecka();
-
-koleckaDiv.addEventListener('input', (event) => {
-    const input = event.target;
-    if (input instanceof HTMLInputElement && input.classList.contains('kolecko')) {
-        input.value = input.value.replace(/[^0-9]/g, '').slice(0, 1);
-    }
-});
+window.setupWheelControls(koleckaDiv);
 
 const unlockButton = document.createElement('button');
 unlockButton.textContent = 'Odemknout';
+unlockButton.className = 'unlock-button';
 const unlockResult = document.createElement('p');
 unlockResult.setAttribute('aria-live', 'polite');
 koleckaDiv.after(unlockButton, unlockResult);
 
-koleckaDiv.addEventListener('wheel', (event) => {
-    const input = event.target;
-
-    if (!(input instanceof HTMLInputElement) ||
-        !input.classList.contains('kolecko') ||
-        event.deltaY === 0) {
-        return;
-    }
-
-    event.preventDefault();
-
-    const current = Number(input.value || 0);
-    const next = (current + (event.deltaY < 0 ? 1 : 9)) % 10;
-
-    input.value = String(next);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-}, { passive: false });
-
 unlockButton.addEventListener('click', async () => {
-    const kolecka = Array.from(koleckaDiv.querySelectorAll('.kolecko'));
-    const code = kolecka.map(input => input.value).join('');
+    const digits = Array.from(koleckaDiv.querySelectorAll('.kolecko'))
+        .map(input => input.value);
+    const code = digits.join('');
 
-    if (kolecka.length < 1 || kolecka.length > 12 ||
-        kolecka.some(input => !/^\d$/.test(input.value))) {
+    if (digits.length < 1 || digits.length > 12 ||
+        digits.some(digit => !/^[0-9]$/.test(digit))) {
         unlockResult.textContent = 'Každé kolečko musí obsahovat jednu číslici.';
         return;
     }
@@ -100,9 +78,49 @@ unlockButton.addEventListener('click', async () => {
             throw new Error(result.error || `Server vrátil chybu ${response.status}.`);
         }
 
-        document.getElementById('img').src = 'open.jpg';
+        document.getElementById('img').src = 'open-optimized.jpg';
         document.getElementById('img').classList.add('open');
-        unlockResult.textContent = result.message;
+        const message = typeof result.message === 'string'
+            ? result.message.trim()
+            : '';
+
+        unlockResult.replaceChildren();
+
+        const parts = message.split(/a:\/([\s\S]*?)\/:a/g);
+        parts.forEach((part, index) => {
+            if (index % 2 === 0) {
+                unlockResult.append(document.createTextNode(part));
+                return;
+            }
+
+            const address = part.trim();
+            const candidate = /^https?:\/\//i.test(address)
+                ? address
+                : `https://${address}`;
+
+            let linkUrl = null;
+            try {
+                const parsedUrl = new URL(candidate);
+                if (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') {
+                    linkUrl = parsedUrl.href;
+                }
+            } catch {
+                // Neplatná adresa zůstane v textu.
+            }
+
+            if (!linkUrl) {
+                unlockResult.append(document.createTextNode(`a:/${part}/:a`));
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.href = linkUrl;
+            link.textContent = address;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            unlockResult.append(link);
+        });
+
     } catch (error) {
         unlockResult.textContent = error instanceof Error
             ? error.message

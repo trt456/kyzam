@@ -5,14 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
     <title>kyzam</title>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+    <script src="script.js" defer></script>
 </head>
 <body>
     <h1>kyzam</h1>
     <input type="number" id="char" min="1" value="4" max="12" placeholder="Enter number of characters (1-12)">
     <div id="kolecka">
-        <img class="open" src="open.jpg" id="img">
+        <img class="open" src="open-optimized.jpg" id="img">
     </div>
+    <p id="wheel-help">Na mobilu přejeď po kolečku nahoru nebo dolů. Číslici můžeš zadat také přes numerickou klávesnici.</p>
+    <p id="link-help">
+        Odkaz ve zprávě zapiš jako <code>a:/www.google.com/:a</code>.
+        Značky se po odemčení změní v klikací odkaz.
+    </p>
     <button class="random">random</button>
     <div id="message-setting">
         <label for="message">Zpráva po odemčení</label>
@@ -20,7 +26,6 @@
     </div>
     <button class="generate">Vytvořit odkaz</button>
     <p id="share-result" aria-live="polite"></p>
-    <div id="qr-code" class="qr-code" aria-label="QR kód pro otevření odkazu" hidden></div>
-    <script defer src="script.js"></script>
+    <div id="qr-code" aria-label="QR kód odkazu"></div>
 </body>
 </html>

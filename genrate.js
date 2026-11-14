@@ -4,11 +4,10 @@ const randomButton = document.querySelector('button.random');
 const generateButton = document.querySelector('button.generate');
 const messageInput = document.getElementById('message');
 const shareResult = document.getElementById('share-result');
-const qrCodeDiv = document.getElementById('qr-code');
 
 function generateKolecka() {
     const char = Number(charInput.value);
-    koleckaDiv.innerHTML = '<img class="open" src="open.jpg" id="img"><div class="inputs-wrapper"></div>';
+    koleckaDiv.innerHTML = '<img class="open" src="open-optimized.jpg" id="img"><div class="inputs-wrapper"></div>';
     const inputsWrapper = koleckaDiv.querySelector('.inputs-wrapper');
 
     for (let i = 0; i < char; i++) {
@@ -22,41 +21,15 @@ function generateKolecka() {
         kolecko.type = 'text';
         kolecko.inputMode = 'numeric';
         kolecko.maxLength = 1;
-        kolecko.pattern = '[0-9]';
         kolecko.value = '0';
         kolecko.classList.add('kolecko');
-        kolecko.addEventListener('focus', () => kolecko.select());
         inputsWrapper.lastElementChild.appendChild(kolecko);
     }
 }
 
 charInput.addEventListener('input', generateKolecka);
 generateKolecka();
-
-koleckaDiv.addEventListener('input', (event) => {
-    const input = event.target;
-    if (input instanceof HTMLInputElement && input.classList.contains('kolecko')) {
-        input.value = input.value.replace(/[^0-9]/g, '').slice(0, 1);
-    }
-});
-
-koleckaDiv.addEventListener('wheel', (event) => {
-    const input = event.target;
-
-    if (!(input instanceof HTMLInputElement) ||
-        !input.classList.contains('kolecko') ||
-        event.deltaY === 0) {
-        return;
-    }
-
-    event.preventDefault();
-
-    const current = Number(input.value || 0);
-    const next = (current + (event.deltaY < 0 ? 1 : 9)) % 10;
-
-    input.value = String(next);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-}, { passive: false });
+window.setupWheelControls(koleckaDiv);
 
 randomButton.addEventListener('click', () => {
     const kolecka = koleckaDiv.querySelectorAll('.kolecko');
@@ -67,12 +40,13 @@ randomButton.addEventListener('click', () => {
 });
 
 generateButton.addEventListener('click', async () => {
-    const kolecka = Array.from(koleckaDiv.querySelectorAll('.kolecko'));
-    const code = kolecka.map(input => input.value).join('');
+    const digits = Array.from(koleckaDiv.querySelectorAll('.kolecko'))
+        .map(input => input.value);
+    const code = digits.join('');
     const message = messageInput.value.trim();
 
-    if (kolecka.length < 1 || kolecka.length > 12 ||
-        kolecka.some(input => !/^\d$/.test(input.value))) {
+    if (digits.length < 1 || digits.length > 12 ||
+        digits.some(digit => !/^[0-9]$/.test(digit))) {
         shareResult.textContent = 'Každé kolečko musí obsahovat jednu číslici.';
         return;
     }
@@ -83,8 +57,6 @@ generateButton.addEventListener('click', async () => {
 
     generateButton.disabled = true;
     shareResult.textContent = 'Vytvářím odkaz…';
-    qrCodeDiv.hidden = true;
-    qrCodeDiv.replaceChildren();
 
     try {
         const response = await fetch(`${window.kyzamConfig.supabaseUrl}/functions/v1/create-lock`, {
@@ -109,17 +81,17 @@ generateButton.addEventListener('click', async () => {
         link.textContent = shareUrl.href;
         shareResult.replaceChildren('Odkaz na zámek: ', link);
 
-        qrCodeDiv.hidden = false;
-        try {
-            new QRCode(qrCodeDiv, {
+        const qrCode = document.getElementById('qr-code');
+        qrCode.replaceChildren();
+        if (typeof QRCode === 'undefined') {
+            qrCode.textContent = 'QR kód se nepodařilo načíst; použij odkaz.';
+        } else {
+            new QRCode(qrCode, {
                 text: shareUrl.href,
-                width: 200,
-                height: 200,
-                correctLevel: QRCode.CorrectLevel.H
+                width: 220,
+                height: 220,
+                correctLevel: QRCode.CorrectLevel.M
             });
-        } catch (error) {
-            console.error('Nepodařilo se vytvořit QR kód.', error);
-            qrCodeDiv.textContent = 'Odkaz funguje, ale QR kód se nepodařilo vytvořit.';
         }
     } catch (error) {
         shareResult.textContent = error instanceof Error
